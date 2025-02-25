@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Send Webhook on Discussion Creation or Edit
         run: |
-          BODY=$(echo "${{ github.event.discussion.body }}" | tr -d '\r' | jq -Rs .)
+          BODY=$(printf '%s' "${{ github.event.discussion.body }}" | tr -d '\r' | jq -Rs .)
 
           JSON=$(jq -nc --arg event "${{ github.event.action }}" \
                         --arg number "${{ github.event.discussion.number }}" \
