@@ -20,7 +20,7 @@ jobs:
                         --arg user "${{ github.event.discussion.user.login }}" \
                         --arg created_at "${{ github.event.discussion.created_at }}" \
                         --arg updated_at "${{ github.event.discussion.updated_at }}" \
-                        --arg body "$BODY" \
+                        --argjson body "$BODY" \
                         '{event: $event, discussion_number: $number, discussion_url: $url, title: $title, user: $user, created_at: $created_at, updated_at: $updated_at, body: $body}')
 
           curl -X POST "http://52.79.203.123:8080/api/github/webhook" \
