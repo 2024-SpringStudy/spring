@@ -7,17 +7,14 @@ on:
 jobs:
   notify_webhook:
     runs-on: ubuntu-latest
+    env:
+      DISCUSSION_BODY: ${{ github.event.discussion.body }}
 
     steps:
-      - name: Save discussion body to file
-        run: |
-          # payload를 body.txt 파일에 저장 (쉘이 직접 내용 해석 안함)
-          printf '%s' "${{ github.event.discussion.body }}" > body.txt
-
       - name: Send Webhook on Discussion Creation or Edit
         run: |
-          # 파일에서 읽어서 CR(\r) 제거 및 안전하게 JSON 문자열로 변환
-          BODY=$(cat body.txt | tr -d '\r' | jq -Rs .)
+          # 환경 변수에 저장된 DISCUSSION_BODY를 그대로 사용하여 CR 제거 및 JSON 인코딩
+          BODY=$(printf '%s' "$DISCUSSION_BODY" | tr -d '\r' | jq -Rs .)
 
           JSON=$(jq -nc --arg event "${{ github.event.action }}" \
                         --arg number "${{ github.event.discussion.number }}" \
