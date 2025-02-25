@@ -9,9 +9,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install jq  # jq 설치
-        run: sudo apt-get update && sudo apt-get install jq -y
-
       - name: Send Webhook on Discussion Creation or Edit
         run: |
           JSON=$(jq -nc --arg event "${{ github.event.action }}" \
@@ -21,7 +18,7 @@ jobs:
                         --arg user "${{ github.event.discussion.user.login }}" \
                         --arg created_at "${{ github.event.discussion.created_at }}" \
                         --arg updated_at "${{ github.event.discussion.updated_at }}" \
-                        --arg body "${{ github.event.discussion.body }}" \
+                        --arg body "$(echo "${{ github.event.discussion.body }}" | sed ':a;N;$!ba;s/\n/ /g' | sed 's/"/\\"/g')" \
                         '{event: $event, discussion_number: $number, discussion_url: $url, title: $title, user: $user, created_at: $created_at, updated_at: $updated_at, body: $body}')
 
           curl -X POST "http://52.79.203.123:8080/api/github/webhook" \
