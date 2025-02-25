@@ -2,28 +2,27 @@ name: Discussion Webhook
 
 on:
   discussion:
-    types: [created, edited]
+    types: [created, edited]  # 새 Discussion이 생성되거나 수정될 때 실행
 
 jobs:
   notify_webhook:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install jq  # jq 설치
+        run: sudo apt-get update && sudo apt-get install jq -y
+
       - name: Send Webhook on Discussion Creation or Edit
         run: |
-          JSON='{
-            "event": "${{ github.event.action }}",
-            "discussion_number": "${{ github.event.discussion.number }}",
-            "discussion_url": "${{ github.event.discussion.html_url }}",
-            "title": "${{ github.event.discussion.title }}",
-            "user": "${{ github.event.discussion.user.login }}",
-            "created_at": "${{ github.event.discussion.created_at }}",
-            "updated_at": "${{ github.event.discussion.updated_at }}",
-            "body": "${{ github.event.discussion.body }}"
-          }'
-
-          # JSON에서 줄바꿈을 제거하고 한 줄로 변환
-          JSON=$(echo "$JSON" | sed ':a;N;$!ba;s/\n/ /g')
+          JSON=$(jq -nc --arg event "${{ github.event.action }}" \
+                        --arg number "${{ github.event.discussion.number }}" \
+                        --arg url "${{ github.event.discussion.html_url }}" \
+                        --arg title "${{ github.event.discussion.title }}" \
+                        --arg user "${{ github.event.discussion.user.login }}" \
+                        --arg created_at "${{ github.event.discussion.created_at }}" \
+                        --arg updated_at "${{ github.event.discussion.updated_at }}" \
+                        --arg body "${{ github.event.discussion.body }}" \
+                        '{event: $event, discussion_number: $number, discussion_url: $url, title: $title, user: $user, created_at: $created_at, updated_at: $updated_at, body: $body}')
 
           curl -X POST "http://52.79.203.123:8080/api/github/webhook" \
                -H "Content-Type: application/json" \
