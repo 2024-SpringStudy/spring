@@ -9,9 +9,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Save discussion body to file
+        run: |
+          # payload를 body.txt 파일에 저장 (쉘이 직접 내용 해석 안함)
+          printf '%s' "${{ github.event.discussion.body }}" > body.txt
+
       - name: Send Webhook on Discussion Creation or Edit
         run: |
-          BODY=$(printf '%s' "${{ github.event.discussion.body }}" | tr -d '\r' | jq -Rs .)
+          # 파일에서 읽어서 CR(\r) 제거 및 안전하게 JSON 문자열로 변환
+          BODY=$(cat body.txt | tr -d '\r' | jq -Rs .)
 
           JSON=$(jq -nc --arg event "${{ github.event.action }}" \
                         --arg number "${{ github.event.discussion.number }}" \
