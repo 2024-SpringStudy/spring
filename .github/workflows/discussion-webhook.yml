@@ -2,7 +2,7 @@ name: Discussion Webhook
 
 on:
   discussion:
-    types: [created, edited]  # 새 Discussion이 생성되거나 수정될 때 실행
+    types: [created, edited]
 
 jobs:
   notify_webhook:
@@ -11,26 +11,17 @@ jobs:
     steps:
       - name: Send Webhook on Discussion Creation or Edit
         run: |
-          BODY=$(echo "${{ github.event.discussion.body }}" | sed ':a;N;$!ba;s/\n/ /g' | sed 's/"/\\"/g')
+          BODY=$(echo "${{ github.event.discussion.body }}" | tr -d '\r' | jq -Rs .)
 
-          JSON=$(printf '{
-            "event": "%s",
-            "discussion_number": "%s",
-            "discussion_url": "%s",
-            "title": "%s",
-            "user": "%s",
-            "created_at": "%s",
-            "updated_at": "%s",
-            "body": "%s"
-          }' \
-            "${{ github.event.action }}" \
-            "${{ github.event.discussion.number }}" \
-            "${{ github.event.discussion.html_url }}" \
-            "${{ github.event.discussion.title }}" \
-            "${{ github.event.discussion.user.login }}" \
-            "${{ github.event.discussion.created_at }}" \
-            "${{ github.event.discussion.updated_at }}" \
-            "$BODY")
+          JSON=$(jq -nc --arg event "${{ github.event.action }}" \
+                        --arg number "${{ github.event.discussion.number }}" \
+                        --arg url "${{ github.event.discussion.html_url }}" \
+                        --arg title "${{ github.event.discussion.title }}" \
+                        --arg user "${{ github.event.discussion.user.login }}" \
+                        --arg created_at "${{ github.event.discussion.created_at }}" \
+                        --arg updated_at "${{ github.event.discussion.updated_at }}" \
+                        --arg body "$BODY" \
+                        '{event: $event, discussion_number: $number, discussion_url: $url, title: $title, user: $user, created_at: $created_at, updated_at: $updated_at, body: $body}')
 
           curl -X POST "http://52.79.203.123:8080/api/github/webhook" \
                -H "Content-Type: application/json" \
