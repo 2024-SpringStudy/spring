@@ -26,6 +26,6 @@ jobs:
                         --argjson body "$BODY" \
                         '{event: $event, discussion_number: $number, discussion_url: $url, title: $title, user: $user, created_at: $created_at, updated_at: $updated_at, body: $body}')
 
-          curl -X POST "http://52.79.203.123:8080/api/github/webhook" \
+          curl -X POST "http://54.180.153.206:8080/api/github/webhook" \
                -H "Content-Type: application/json" \
                -d "$JSON"
